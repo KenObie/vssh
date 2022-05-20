@@ -12,19 +12,18 @@ func main() {
 	fmt.Println("starting test")
 
 	vs := vssh.New().Start()
-	config := vssh.GetConfigUserPass("", "")
+	config := vssh.GetConfigUserPass("pi", "")
 	vs.AddClient("", config, vssh.SetMaxSessions(4))
-
 	vs.Wait()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	//cmd := "cat README.md"
+	cmd := "cat README.md"
 	timeout, _ := time.ParseDuration("6s")
 	respChan := vs.Sftp(ctx, "/Users/kenobrien/Development/KenObie/vssh/README.md", "/home/pi", timeout, 0)
-	respChan2 := vs.Sftp(ctx, "/Users/kenobrien/Development/KenObie/vssh/Contributing.md", "/home/pi", timeout, 0)
 
+	fmt.Println("test")
 	resp := <-respChan
 	if err := resp.Err(); err != nil {
 		log.Fatal(err)
@@ -38,16 +37,17 @@ func main() {
 		fmt.Println(txt)
 	}
 
-	resp2 := <-respChan2
-	if err := resp2.Err(); err != nil {
+	cmdRespChan := vs.Run(ctx, cmd, timeout)
+	rp := <-cmdRespChan
+	if err := resp.Err(); err != nil {
 		log.Fatal(err)
 	}
 
-	stream2 := resp.GetStream()
-	defer stream2.Close()
+	cmdstream := rp.GetStream()
+	defer cmdstream.Close()
 
-	for stream2.ScanStdout() {
-		txt := stream2.TextStdout()
+	for cmdstream.ScanStdout() {
+		txt := cmdstream.TextStdout()
 		fmt.Println(txt)
 	}
 

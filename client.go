@@ -234,14 +234,14 @@ LOOP:
 
 func (c *clientAttr) transfer(s sftp) {
 
-	//var (
-	//	//wg    sync.WaitGroup
-	//	done  = make(chan struct{})
-	//	rcOut = make(chan []byte, maxOutChanBuf)
-	//	rcIn  = make(chan []byte, maxInChanBuf)
-	//	rcErr = make(chan []byte, maxErrChanBuf)
-	//	rcSig = make(chan ssh.Signal, 1)
-	//)
+	var (
+		//wg    sync.WaitGroup
+		done  = make(chan struct{})
+		rcOut = make(chan []byte, maxOutChanBuf)
+		rcIn  = make(chan []byte, maxInChanBuf)
+		rcErr = make(chan []byte, maxErrChanBuf)
+		rcSig = make(chan ssh.Signal, 1)
+	)
 
 	if c.client == nil {
 		setErr(c, errNotConn)
@@ -263,24 +263,24 @@ func (c *clientAttr) transfer(s sftp) {
 		return
 	}
 
-	//resp := &Response{
-	//	id: c.addr,
-	//
-	//	outChan: rcOut,
-	//	inChan:  rcIn,
-	//	errChan: rcErr,
-	//	sigChan: rcSig,
-	//}
-	//s.respChan <- resp
+	resp := &Response{
+		id: c.addr,
+
+		outChan: rcOut,
+		inChan:  rcIn,
+		errChan: rcErr,
+		sigChan: rcSig,
+	}
+	s.respChan <- resp
 
 	if s.action == 0 {
 		uploadFile(sftp, s.localPath, s.remotePath)
 	}
-	//sftp.Close()
-	//close(done)
-	//close(rcErr)
-	//close(rcOut)
-	//close(rcIn)
+	sftp.Close()
+	close(done)
+	close(rcErr)
+	close(rcOut)
+	close(rcIn)
 
 }
 
